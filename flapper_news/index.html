@@ -12,7 +12,7 @@
       font-size: 20px;
       margin-left: 10px;
     }
-    .add-post {
+    .add-new {
       margin-top: 30px; 
     }
   </style>
@@ -54,7 +54,7 @@
     </div>
 
     <form ng-submit="addPost()" 
-          class="add-post">
+          class="add-new">
       <h3>Add a new Post</h3>
       <div class="form-group">
         <input class="form-control" 
@@ -92,6 +92,22 @@
       {{ comment.upvotes }} - by {{ comment.author }}
       <span class="link">{{ comment.body }}</span>
     </div>
+
+    <form ng-submit="addComment()"
+          class="add-new">
+      <h3>Add a new comment</h3>
+
+      <div class="form-group">
+        <input type="text"
+               class="form-control"
+               placeholder="Comment"
+               ng-model="body">
+        </input>
+      </div>
+      <button type="submit"
+              class="btn btn-primary btn-block">Comment
+      </button>
+    </form>
   </script>
 </body>
 </html>
