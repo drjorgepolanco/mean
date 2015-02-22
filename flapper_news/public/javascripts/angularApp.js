@@ -14,7 +14,7 @@ app.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $ur
       }
     })
     .state('posts', {
-      url: '/posts/{id}',
+      url: '/posts/:id',
       templateUrl: '/posts.html',
       controller: 'PostsCtrl',
       resolve: {
@@ -67,7 +67,15 @@ app.factory('posts', ['$http', function($http) {
 
   // Add a comment to a post
   o.addComment = function(id, comment) {
-    return $http.post('/posts' + id + '/comments', comment);
+    return $http.post('/posts/' + id + '/comments', comment);
+  };
+
+  // Upvote comments
+  o.upvoteComment = function(post, comment) {
+    return $http.put('/posts/' + post._id + '/comments/'+ comment._id + '/upvote')
+      .success(function(data){
+        comment.upvotes += 1;
+      });
   };
 
   return o;
@@ -75,8 +83,7 @@ app.factory('posts', ['$http', function($http) {
 
 //              Injecting the Service ⇘ ⇘ ⇘
 app.controller('MainCtrl', ['$scope', 'posts', function($scope, posts) {
-  $scope.test = 'Hello World!';
-  
+
   $scope.posts = posts.posts;
 
   // Save posts to the server
@@ -108,19 +115,11 @@ app.controller('PostsCtrl', ['$scope', 'posts', 'post', function($scope, posts, 
       $scope.post.comments.push(comment);
     });
     $scope.body = '';
-
-
-    $scope.post.comments.push({
-      body: $scope.body,
-      author: 'user',
-      upvotes: 0
-    });
-    $scope.body = '';
   };
 
   $scope.incrementUpvotes = function(comment) {
-    comment.upvotes += 1;
-  }; 
+    posts.upvoteComment(post, comment);
+  };
 }]);
 
 
