@@ -29,17 +29,27 @@ app.factory('posts', ['$http', function($http) {
   var o = {
     posts: []
   };
+
   // Display all posts
   o.getAll = function() {
     return $http.get('/posts').success(function(data) {
       angular.copy(data, o.posts);
     });
   };
+
   // Create new Post
   o.create = function(post) {
     return $http.post('/posts', post).success(function(data) {
       o.posts.push(data);
     });
+  };
+
+  // Upvote a post
+  o.upvote = function(post) {
+    return $http.put('/posts/' + post._id + '/upvote')
+      .success(function(data) {
+        post.upvotes += 1;
+      });
   };
 
   return o;
@@ -63,7 +73,8 @@ app.controller('MainCtrl', ['$scope', 'posts', function($scope, posts) {
   };
 
   $scope.incrementUpvotes = function(post) {
-    post.upvotes += 1;
+    // store the new vote
+    posts.upvote(post);
   }; 
 }]);
 
