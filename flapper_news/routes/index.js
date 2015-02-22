@@ -34,8 +34,17 @@ router.param('post', function(req, res, next, id) {
 
 /* Show the Single Post */ // when we call this *1
 // then this returns the JSON back to the client
-router.get('/posts/:post', function(req, res) {
-  res.json(req.post);
+// router.get('/posts/:post', function(req, res) {
+//   res.json(req.post);
+// });
+
+/* Retrieve comments along with posts */
+router.get('/posts/:post', function(req, res, next) {
+  req.post.populate('comments', function(err, post) {
+    if (err) { return next(err); }
+
+    res.json(post);
+  });
 });
 
 /* Create a new Post */
@@ -57,6 +66,46 @@ router.put('/posts/:post/upvote', function(req, res, next) {
     if (err) { return next(err); }
 
     res.json(post);
+  });
+});
+
+/* Create comments route for a particular post */
+router.post('/posts/:post/comments', function(req, res, next) {
+  // new
+  var comment = new Comment(req.body);
+  comment.post = req.post;
+
+  // create
+  comment.save(function(err, comment) {
+    if (err) { return next(err); }
+
+    req.post.comments.push(comment);
+    req.post.save(function(err, post) {
+      if (err) { return nex(err); }
+
+      res.json(comment);
+    })
+  });
+});
+
+router.param('comment', function(req, res, next, id) {
+  var query = Comment.findById(id);
+
+  query.exec(function(err, comment) {
+    if (err) { return next(err); }
+    if (!comment) { return next(new Error("can't find comment")); }
+
+    req.comment = comment;
+    return next();
+  });
+});
+
+/* Vote on a Comment */
+router.put('/posts/:post/comments/:comment/upvote', function(req, res, next) {
+  req.comment.upvote(function(err, comment) {
+    if (err) { return next(err); }
+
+    res.json(comment);
   });
 });
 
