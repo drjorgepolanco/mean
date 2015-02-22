@@ -1,13 +1,13 @@
-var express  = require('express');
-var router   = express.Router();
-
 var mongoose = require('mongoose');
+var express  = require('express');
+
+var router   = express.Router();
 var Post     = mongoose.model('Post');
 var Comment  = mongoose.model('Comment');
 
 /* root: GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+  res.render('index');
 });
 
 /* index: List all Posts */
@@ -15,6 +15,19 @@ router.get('/posts', function(req, res, next) {
   Post.find(function(err, posts) {
     if (err) { return next(err); }
     res.json(posts);
+  });
+});
+
+/* Create a new Post */
+router.post('/posts', function(req, res, next) {
+  // new
+  var post = new Post(req.body);
+
+  // create
+  post.save(function(err, post) {
+    if (err) { return next(err); }
+
+    res.json(post);
   });
 });
 
@@ -32,6 +45,18 @@ router.param('post', function(req, res, next, id) {
   });
 });
 
+router.param('comment', function(req, res, next, id) {
+  var query = Comment.findById(id);
+
+  query.exec(function(err, comment) {
+    if (err) { return next(err); }
+    if (!comment) { return next(new Error("can't find comment")); }
+
+    req.comment = comment;
+    return next();
+  });
+});
+
 /* Show the Single Post */ // when we call this *1
 // then this returns the JSON back to the client
 // router.get('/posts/:post', function(req, res) {
@@ -41,19 +66,6 @@ router.param('post', function(req, res, next, id) {
 /* Retrieve comments along with posts */
 router.get('/posts/:post', function(req, res, next) {
   req.post.populate('comments', function(err, post) {
-    if (err) { return next(err); }
-
-    res.json(post);
-  });
-});
-
-/* Create a new Post */
-router.post('/posts', function(req, res, next) {
-  // new
-  var post = new Post(req.body);
-
-  // create
-  post.save(function(err, post) {
     if (err) { return next(err); }
 
     res.json(post);
@@ -84,19 +96,7 @@ router.post('/posts/:post/comments', function(req, res, next) {
       if (err) { return nex(err); }
 
       res.json(comment);
-    })
-  });
-});
-
-router.param('comment', function(req, res, next, id) {
-  var query = Comment.findById(id);
-
-  query.exec(function(err, comment) {
-    if (err) { return next(err); }
-    if (!comment) { return next(new Error("can't find comment")); }
-
-    req.comment = comment;
-    return next();
+    });
   });
 });
 
@@ -108,9 +108,5 @@ router.put('/posts/:post/comments/:comment/upvote', function(req, res, next) {
     res.json(comment);
   });
 });
-
-
-
-
 
 module.exports = router;

@@ -6,7 +6,12 @@ app.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $ur
     .state('home', {
       url: '/home',
       templateUrl: '/home.html',
-      controller: 'MainCtrl'
+      controller: 'MainCtrl',
+      resolve: {
+        postPromise: ['posts', function(posts) {
+          return posts.getAll();
+        }]
+      }
     })
     .state('posts', {
       url: '/posts/{id}', // 'id' is a route parameter that will be made available to our controller
@@ -20,10 +25,23 @@ app.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $ur
 // Create a factory for posts
 // by exporting an object that contains the posts array we can add new objects 
 // and methods to our services in the future
-app.factory('posts', [function() {
+app.factory('posts', ['$http', function($http) {
   var o = {
     posts: []
   };
+
+  o.getAll = function() {
+    return $http.get('/posts').success(function(data) {
+      angular.copy(data, o.posts);
+    });
+  };
+
+  o.create = function() {
+    return $http.post('/posts', post).success(function(data) {
+      o.posts.push(data);
+    });
+  }
+
   return o;
 }]);
 
@@ -77,3 +95,26 @@ app.controller('PostsCtrl', ['$scope', '$stateParams', 'posts', function($scope,
     comment.upvotes += 1;
   }; 
 }]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
