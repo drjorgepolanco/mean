@@ -1,31 +1,35 @@
 var app = angular.module('flapperNews', ['ui.router']);
 
-app.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider) {
+app.config([
+  '$stateProvider', 
+  '$urlRouterProvider', 
+  function($stateProvider, $urlRouterProvider) {
 
-  $stateProvider
-    .state('home', {
-      url: '/home',
-      templateUrl: '/home.html',
-      controller: 'MainCtrl',
-      resolve: {
-        postPromise: ['posts', function(posts) {
-          return posts.getAll();
-        }]
-      }
-    })
-    .state('posts', {
-      url: '/posts/:id',
-      templateUrl: '/posts.html',
-      controller: 'PostsCtrl',
-      resolve: {
-        post: ['$stateParams', 'posts', function($stateParams, posts) {
-          return posts.get($stateParams.id);
-        }]
-      }
-    });
+    $stateProvider
+      .state('home', {
+        url: '/home',
+        templateUrl: '/home.html',
+        controller: 'MainCtrl',
+        resolve: {
+          postPromise: ['posts', function(posts) {
+            return posts.getAll();
+          }]
+        }
+      })
+      .state('posts', {
+        url: '/posts/:id',
+        templateUrl: '/posts.html',
+        controller: 'PostsCtrl',
+        resolve: {
+          post: ['$stateParams', 'posts', function($stateParams, posts) {
+            return posts.get($stateParams.id);
+          }]
+        }
+      });
 
-  $urlRouterProvider.otherwise('home');
-}]);
+    $urlRouterProvider.otherwise('home');
+  }
+]);
 
 // Create a factory for posts
 // by exporting an object that contains the posts array we can add new objects 
@@ -53,7 +57,15 @@ app.factory('posts', ['$http', function($http) {
   o.upvote = function(post) {
     return $http.put('/posts/' + post._id + '/upvote')
       .success(function(data) {
-        post.upvotes += 1;
+        post.votes += 1;
+      });
+  };
+
+  // Downvote a post
+  o.downvote = function(post) {
+    return $http.put('/posts/' + post._id + '/downvote')
+      .success(function(data) {
+        post.votes -= 1;
       });
   };
 
@@ -71,10 +83,18 @@ app.factory('posts', ['$http', function($http) {
   };
 
   // Upvote comments
-  o.upvoteComment = function(post, comment) {
-    return $http.put('/posts/' + post._id + '/comments/'+ comment._id + '/upvote')
-      .success(function(data){
-        comment.upvotes += 1;
+  o.upvoteComment = function (post, comment) {
+    return $http.put('/posts/' + post._id + '/comments/' + comment._id + '/upvote')
+      .success(function (data) {
+        comment.votes += 1;
+      });
+  };
+
+  // Downvote comments
+  o.downvoteComment = function (post, comment) {
+    return $http.put('/posts/' + post._id + '/comments/' + comment._id + '/downvote')
+      .success(function (data) {
+        comment.votes -= 1;
       });
   };
 
@@ -97,9 +117,14 @@ app.controller('MainCtrl', ['$scope', 'posts', function($scope, posts) {
     $scope.link  = '';
   };
 
-  $scope.incrementUpvotes = function(post) {
+  $scope.upvote = function(post) {
     // store the new vote
     posts.upvote(post);
+  };
+
+  $scope.downvote = function(post) {
+    // store the new vote
+    posts.downvote(post);
   }; 
 }]);
 
@@ -117,30 +142,11 @@ app.controller('PostsCtrl', ['$scope', 'posts', 'post', function($scope, posts, 
     $scope.body = '';
   };
 
-  $scope.incrementUpvotes = function(comment) {
+  $scope.upvote = function (comment) {
     posts.upvoteComment(post, comment);
   };
+
+  $scope.downvote = function (comment) {
+    posts.downvoteComment(post, comment);
+  };
 }]);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

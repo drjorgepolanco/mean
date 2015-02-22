@@ -72,9 +72,18 @@ router.get('/posts/:post', function(req, res, next) {
   });
 });
 
-/* Vote on a Post */
+/* Upvote on a Post */
 router.put('/posts/:post/upvote', function(req, res, next) {
   req.post.upvote(function(err, post) {
+    if (err) { return next(err); }
+
+    res.json(post);
+  });
+});
+
+/* Downvote on a Post */
+router.put('/posts/:post/downvote', function(req, res, next) {
+  req.post.downvote(function(err, post){
     if (err) { return next(err); }
 
     res.json(post);
@@ -100,9 +109,18 @@ router.post('/posts/:post/comments', function(req, res, next) {
   });
 });
 
-/* Vote on a Comment */
+/* Upvote on a Comment */
 router.put('/posts/:post/comments/:comment/upvote', function(req, res, next) {
-  req.comment.upvoteComment(function(err, comment) {
+  req.comment.upvote(function(err, comment){
+    if (err) { return next(err); }
+
+    res.json(comment);
+  });
+});
+
+/* Downvote on a Comment */
+router.put('/posts/:post/comments/:comment/downvote', function(req, res, next) {
+  req.comment.downvote(function(err, comment){
     if (err) { return next(err); }
 
     res.json(comment);
