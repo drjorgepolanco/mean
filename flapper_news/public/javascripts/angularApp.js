@@ -14,9 +14,14 @@ app.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $ur
       }
     })
     .state('posts', {
-      url: '/posts/{id}', // 'id' is a route parameter that will be made available to our controller
+      url: '/posts/{id}',
       templateUrl: '/posts.html',
-      controller: 'PostsCtrl'
+      controller: 'PostsCtrl',
+      resolve: {
+        post: ['$stateParams', 'posts', function($stateParams, posts) {
+          return posts.get($stateParams.id);
+        }]
+      }
     });
 
   $urlRouterProvider.otherwise('home');
@@ -52,6 +57,19 @@ app.factory('posts', ['$http', function($http) {
       });
   };
 
+  // Get a single post
+  o.get = function(id) {
+    // Instead of success(), we are using a promise here: then()
+    return $http.get('/posts/' + id).then(function(res) {
+      return res.data;
+    });
+  };
+
+  // Add a comment to a post
+  o.addComment = function(id, comment) {
+    return $http.post('/posts' + id + '/comments', comment);
+  };
+
   return o;
 }]);
 
@@ -66,7 +84,7 @@ app.controller('MainCtrl', ['$scope', 'posts', function($scope, posts) {
     if ($scope.title === '') { return; }
     posts.create({
       title: $scope.title,
-      link: $scope.link,
+      link: $scope.link
     });
     $scope.title = '';
     $scope.link  = '';
@@ -78,11 +96,20 @@ app.controller('MainCtrl', ['$scope', 'posts', function($scope, posts) {
   }; 
 }]);
 
-app.controller('PostsCtrl', ['$scope', '$stateParams', 'posts', function($scope, $stateParams, posts) {
-  $scope.post = posts.posts[$stateParams.id];
+app.controller('PostsCtrl', ['$scope', 'posts', 'post', function($scope, posts, post) {
+  $scope.post = post;
 
   $scope.addComment = function() {
     if ($scope.body === '') { return; }
+    posts.addComment(post._id, {
+      body: $scope.body,
+      author: 'user'
+    }).success(function(comment) {
+      $scope.post.comments.push(comment);
+    });
+    $scope.body = '';
+
+
     $scope.post.comments.push({
       body: $scope.body,
       author: 'user',
